@@ -534,7 +534,7 @@ eureka:
 # client 应用名称
 spring:
   application:
-    name: provider
+    name: xri-service-api-provider-impl
 #tomcat端口
 server:
   port: 8001
