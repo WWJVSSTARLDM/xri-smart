@@ -236,3 +236,69 @@ public class TestController {
 - **Feign 整合了ribbon，具有负载均衡的能力**
 
 - **整合了Hystrix，具有熔断的能力**
+
+#### 4.2 Pom 配置
+```xml
+        <!-- openfeign 组件 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+```
+#### 4.3 Provider 服务提供者(采用多模块)
+
+
+##### 4.3.1 Provider 启动类
+
+```java
+/**
+ * 开启Feign，若是多模块需要扫描指定存放Feign接口的的路径
+ */
+@EnableFeignClients
+@EnableDiscoveryClient
+@SpringBootApplication
+public class ConsumerApp {
+    public static void main(String[] args) {
+        SpringApplication.run(ConsumerApp.class, args);
+    }
+}
+```
+##### 4.3.2 Feign 接口
+```java
+/**
+ * name调用哪个服务的那个接口(注册到Eureka的服务)
+ * 由于接口是提供方提供，这里选择继承提供方的接口并声明@FeignClinet
+ */
+@FeignClient(name = "xri-service-api-provider-impl")
+public interface OrderServiceFeign extends OrderService {
+  
+}
+
+/**
+ * 提供方提供的接口
+ * 接口需要对应Controller的controller注解，参数注解以及参数必须一致；
+ */
+public interface OrderService {
+    @GetMapping("/order")
+    Order getOrder(@RequestParam Long id);
+}
+
+```
+##### 4.3.3 Prodvider Feign接口对应的Controller
+```java
+/**
+ * Feign接口对应的Controller
+ */
+@RestController
+public class ProviderController {
+
+    @Autowired
+    private OrderService orderServiceImpl;
+
+    @GetMapping("/order")
+    public Order getOrder(@RequestParam Long id) {
+        System.out.println("ProviderController......");
+        return orderServiceImpl.getOrder(id);
+    }
+}
+```
