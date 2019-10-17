@@ -46,7 +46,7 @@
             <artifactId>HikariCP</artifactId>
         </dependency>
     </dependencies>
-     Maven 打包插件
+     <!-- Maven 打包插件 -->
     <build>
         <plugins>
             <plugin>
