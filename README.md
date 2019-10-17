@@ -543,3 +543,10 @@ feign:
   hystrix:
     enabled: true
 ```
+### 六、HystrixDashboard 服务监控
+
+### 6.1 简介
+
+​	**Hystrix Dashboard是Hystrix的仪表盘组件，主要用来实时监控Hystrix的各项指标信息，通过界面反馈的信息可以快速发现系统中存在的问题。**
+
+​	**使用Hystrixdashboard 必须在提供者提供的接口上使用@HystrixCommand注解,可以不提供熔断函数，但是不提供也将出现异常无回调函数，导致系统出现雪崩。**
