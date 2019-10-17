@@ -172,7 +172,7 @@ eureka:
 # client 应用名称
 spring:
   application:
-    name: provider
+    name: xri-service-api-provider-impl
 #tomcat端口
 server:
   port: 8001
@@ -349,4 +349,58 @@ public class ConsumerService {
         return order;
     }
 }
+```
+### 五、Hystrix 断路器
+
+#### 5.1 简介
+​	**在微服务架构中，根据业务来拆分成一个个的服务，服务与服务之间可以相互调用（RPC），在Spring Cloud可以用RestTemplate+Ribbon和Feign来调用。为了保证其高可用，单个服务通常会集群部署。由于网络原因或者自身的原因，服务并不能保证100%可用，如果单个服务出现问题，调用这个服务就会出现线程阻塞，此时若有大量的请求涌入，Servlet容器的线程资源会被消耗完毕，导致服务瘫痪。服务与服务之间的依赖性，故障会传播，会对整个微服务系统造成灾难性的严重后果，这就是服务故障的“雪崩”效应。**
+
+#### 5.2 Pom 配置
+```xml
+        <!-- hystrix -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        </dependency>
+```
+#### 5.3 启动类 配置
+```java
+/**
+ * 开启Hystrix
+ * 
+ * @SpringCloudApplication是组合注解相当于下面三个注解一起使用
+ * @EnableDiscoveryClient
+ * @EnableCircuitBreaker
+ * @SpringBootApplication
+ */
+@EnableFeignClients
+@SpringCloudApplication
+public class ConsumerApp {
+    public static void main(String[] args) {
+        SpringApplication.run(ConsumerApp.class, args);
+    }
+}
+```
+#### 5.4 Yml 配置
+```yaml
+eureka:
+  instance:
+    # 现实服务的IP:Port
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # 不加此项 如果注册中心 和 服务位于同一服务器，会导致 注册的ip为 localhost，导致其他 地址 无法访问此 服务
+    prefer-ip-address: true
+    ip-address: ${spring.cloud.client.ip-address}
+  client:
+    service-url:
+      # 注册中心地址 向Eureka注册
+      # Eureka如果是集群的话，注册到Eureka集群使用“,”分割
+      # defaultZone: http://localhost:8761/eureka/，http://localhost:8762/eureka/
+      defaultZone: http://localhost:8761/eureka/
+# client 应用名称
+spring:
+  application:
+    name: xri-service-api-provider-impl
+#tomcat端口
+server:
+  port: 8001
 ```
