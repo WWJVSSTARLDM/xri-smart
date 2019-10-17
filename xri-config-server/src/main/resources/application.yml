@@ -1,0 +1,31 @@
+eureka:
+  instance:
+    # 现实服务的IP:Port
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # 不加此项 如果注册中心 和 服务位于同一服务器，会导致 注册的ip为 localhost，导致其他 地址 无法访问此 服务
+    prefer-ip-address: true
+    ip-address: ${spring.cloud.client.ip-address}
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+spring:
+  application:
+    name: xri-config-server
+    # Github远程仓库地址
+  cloud:
+    config:
+      server:
+        git:
+          # git 地址
+          uri: https://github.com/xr2117/xri-smart-config.git
+          username: xr2117
+          password: llm818222
+          # Gitlab 下文件夹
+#          search-paths: /dev
+  rabbitmq:
+    host: 106.13.90.174
+    username: admin
+    password: burning
+#tomcat端口
+server:
+  port: 3344

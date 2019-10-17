@@ -1,0 +1,24 @@
+eureka:
+  client:
+    service-url:
+      # 注册中心地址
+      defaultZone: http://localhost:8761/eureka/
+    # 禁止eureka向自己注册
+    register-with-eureka: false
+    fetchRegistry: false
+  # 关闭eureka心跳警告(不建议):
+  server:
+    enable-self-preservation: false
+    # eureka server刷新readCacheMap的时间，注意，client读取的是readCacheMap
+    # 这个时间决定了多久会把readWriteCacheMap的缓存更新到readCacheMap上
+    response-cache-update-interval-ms: 30000
+    # 启用主动失效，并且每次主动失效检测间隔为30s，默认为0
+    eviction-interval-timer-in-ms: 30000
+
+# eureka 应用名称
+spring:
+  application:
+    name: xri-smart-eureka
+#tomcat端口（8761也是默认端口）
+server:
+  port: 8761

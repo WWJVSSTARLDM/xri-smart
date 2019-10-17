@@ -1,0 +1,14 @@
+spring:
+  application:
+    # 应用名称并且对应github文件名前缀
+    name: xri-gateway
+  cloud:
+    config:
+      discovery:
+        # 开启cloud配置
+        enabled: true
+        service-id: xri-config-server
+      # 本次访问的配置项
+      profile: dev
+      # 拉去远程配置找不到则不会启动
+      fail-fast: true

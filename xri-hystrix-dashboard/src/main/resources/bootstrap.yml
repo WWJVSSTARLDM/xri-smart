@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: xri-hystrix-dashboard
+  cloud:
+    config:
+      discovery:
+        # 开启cloud配置
+        enabled: true
+        service-id: xri-config-server
+      # 本次访问的配置项
+      profile: dev
+      fail-fast: true
+server:
+  port: 8762
