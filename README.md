@@ -141,15 +141,14 @@ server:
 ```java
 
 /**
- * 表示该服务是Client客户端，
- * 并向Eureka注册
+ * 表示该服务是Client客户端，并向Eureka注册
  */
 @EnableDiscoveryClient
 @SpringBootApplication
-public class ClinetApplication {
+public class ConsumerApp {
 
     public static void main(String[] args) {
-        SpringApplication.run(ClinetApplication.class, args);
+        SpringApplication.run(ConsumerApp.class, args);
     }
 }
 
@@ -284,7 +283,7 @@ public interface OrderService {
 }
 
 /**
- * 提供方自己对接口的实现，给提供方提供业务
+ * 提供方自己对接口的实现，给提消费者提供远程调用实现
  */
 @Service
 public class ProviderServiceImpl implements OrderService {
@@ -543,6 +542,7 @@ feign:
   hystrix:
     enabled: true
 ```
+
 ### 六、HystrixDashboard 服务监控
 
 ### 6.1 简介
