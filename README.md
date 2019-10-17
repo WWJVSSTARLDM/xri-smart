@@ -283,6 +283,20 @@ public interface OrderService {
     Order getOrder(@RequestParam Long id);
 }
 
+/**
+ * 提供方自己对接口的实现，给提供方提供业务
+ */
+@Service
+public class ProviderServiceImpl implements OrderService {
+
+    @Override
+    public Order getOrder(Long id) {
+        Order order = new Order();
+        order.setOrderId(post);
+        order.setOrderName("兰博基尼");
+        return order;
+    }
+}
 ```
 ##### 4.3.3 Prodvider Feign接口对应的Controller
 ```java
@@ -299,6 +313,40 @@ public class ProviderController {
     public Order getOrder(@RequestParam Long id) {
         System.out.println("ProviderController......");
         return orderServiceImpl.getOrder(id);
+    }
+}
+```
+#### 4.4 Consumer 服务消费者
+
+> 消费者进行调用提供者的接口
+
+##### 4.4.1 Consumer 启动类
+```java
+/**
+ * 消费者启动类，启用Feign
+ */
+@SpringBootApplication
+@EnableDiscoveryClient
+public class ConsumerApp {
+    public static void main(String[] args) {
+        SpringApplication.run(ConsumerApp.class, args);
+    }
+}
+```
+##### 4.4.2 注入接口进行调用
+```java
+/**
+ * OrderServiceFeign 通过Feign进行服务之间的调用
+ */
+@Service
+public class ConsumerService {
+
+    @Autowired
+    OrderServiceFeign orderServiceFeign;
+
+    public Order getOrder(Long id) {
+        Order order = orderServiceFeign.getOrder(id);
+        return order;
     }
 }
 ```
