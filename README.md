@@ -368,7 +368,7 @@ public class ConsumerService {
 /**
  * 开启Hystrix
  * 
- * @SpringCloudApplication是组合注解相当于下面三个注解一起使用
+ * @SpringCloudApplication 是组合注解相当于下面三个注解一起使用,这里只说明一次
  * @EnableDiscoveryClient
  * @EnableCircuitBreaker
  * @SpringBootApplication
@@ -403,4 +403,143 @@ spring:
 #tomcat端口
 server:
   port: 8001
+```
+
+#### 5.5 使用Hystrix 服务熔断
+```java
+/**
+ * Feign接口对应的Controller
+ */
+@RestController
+public class ConsumerController {
+
+    @Autowired
+    ConsumerService providerService;
+
+    /**
+     * 弱抛出异常，将会引发Hystrix机制，fallback方法
+     * @HystrixCommand 开启熔断 fallbackMethod:指定回调方法
+     */
+    @HystrixCommand(fallbackMethod = "fallback")
+    @GetMapping("/order")
+    public Order getOrder(@RequestParam Long id) {
+        System.out.println("ConsumerController...");
+        return consumerService.getOrder(id);
+    }
+
+
+    public Order fallback(@RequestParam Long id) {
+        System.out.println("hystrix 介入..");
+        return new Order("hystrix", "123456");
+    }
+}
+```
+#### 5.6 使用Hystrix 服务降级 消费者（重点使用）
+> **使用场景：类似天猫双11，并发量高会关掉某些查询数据库的服务进行降级，返回一个预处理结果**
+> **提供者、消费者都要引入相同依赖**
+
+##### 5.6.1 Pom 配置
+```xml
+        <!-- Hystrix -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        </dependency>
+```
+##### 5.6.2 消费者启动类 配置
+```java
+
+@EnableFeignClients
+@SpringCloudApplication
+public class ConsumerApp {
+    public static void main(String[] args) {
+        SpringApplication.run(ConsumerApp.class, args);
+    }
+}
+
+```
+##### 5.6.3 消费者使用Feign 接口通信
+
+```java
+/**
+ * Feign组件
+ * name     Eureka注册的要调取的服务
+ * fallback 出现服务中断，则调取降级方法
+ * 此处一样继承提供方提供的Api接口，后面不再重复
+ */
+@FeignClient(name = "xri-service-api-provider-impl", fallback = OrderServiceFallback.class)
+public interface OrderServiceFeign extends OrderService {
+}
+
+```
+##### 5.6.4 Feign对应的Controller
+
+```java
+/**
+ * Feign接口对应的Controller
+ */
+@RestController
+public class ConsumerController {
+
+    @Autowired
+    ConsumerService providerService;
+
+    @GetMapping("/order")
+    public Order getOrder(@RequestParam Long id) {
+        System.out.println("ConsumerController...");
+        return consumerService.getOrder(id);
+    }
+}
+```
+##### 5.6.5 Hystrix 回退类
+```java
+/**
+ * Hystrix 回退类
+ * Provider服务若中断则进行服务降级
+ * 要求实现实现了Feign的接口
+** OrderServiceFeign 接口则是自己实现的接口并且继承提供方提供的Api接口
+ */
+@Component
+@Slf4j
+public class OrderServiceFallback implements OrderServiceFeign {
+    private static Order order;
+
+    static {
+        order = new Order(500L, "系统异常，服务降级");
+    }
+
+    @Override
+    public Order getOrder(Long id) {
+        log.error("系统异常,请及时处理");
+        return order;
+    }
+}
+```
+
+##### 5.6.6 Yml 依赖配置
+```yaml
+eureka:
+  instance:
+    # 现实服务的IP:Port
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # 不加此项 如果注册中心 和 服务位于同一服务器，会导致 注册的ip为 localhost，导致其他 地址 无法访问此 服务
+    prefer-ip-address: true
+    ip-address: ${spring.cloud.client.ip-address}
+  client:
+    service-url:
+      # 注册中心地址 向Eureka注册
+      # Eureka如果是集群的话，注册到Eureka集群使用“,”分割
+      # defaultZone: http://localhost:8761/eureka/，http://localhost:8762/eureka/
+      defaultZone: http://localhost:8761/eureka/
+# client 应用名称
+spring:
+  application:
+    name: provider
+#tomcat端口
+server:
+  port: 8001
+# 开启hystrix 熔断降级（这里如果不配置，将无效）
+feign:
+  hystrix:
+    enabled: true
 ```
