@@ -122,3 +122,117 @@ spring:
 server:
   port: 8761
 ```
+### 二、Client 客户端（所有Client模板）
+
+#### 2.1 Pom 配置
+```xml
+        <!--  Spring boot web 模块-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!--  Spring boot client 客户端-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+```
+#### 2.2 启动类 配置
+```java
+
+/**
+ * 表示该服务是Client客户端，
+ * 并向Eureka注册
+ */
+@EnableDiscoveryClient
+@SpringBootApplication
+public class ClinetApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ClinetApplication.class, args);
+    }
+}
+
+```
+#### 2.3 Yml 配置
+```yaml
+eureka:
+  instance:
+    # 现实服务的IP:Port
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # 不加此项 如果注册中心 和 服务位于同一服务器，会导致 注册的ip为 localhost，导致其他 地址 无法访问此 服务
+    prefer-ip-address: true
+    ip-address: ${spring.cloud.client.ip-address}
+  client:
+    service-url:
+      # 注册中心地址 向Eureka注册
+      # Eureka如果是集群的话，注册到Eureka集群使用“,”分割
+      # defaultZone: http://localhost:8761/eureka/，http://localhost:8762/eureka/
+      defaultZone: http://localhost:8761/eureka/
+# client 应用名称
+spring:
+  application:
+    name: provider
+#tomcat端口
+server:
+  port: 8001
+```
+
+### 三、Ribbon 负载均衡
+
+### 3.1 简介
+
+​	**Spring Cloud Ribbon是一个基于HTTP和TCP的客户端负载均衡工具，它基于Netflix Ribbon实现。通过Spring Cloud的封装，可以让我们轻松地将面向服务的REST模版请求自动转换成客户端负载均衡的服务调用。Spring Cloud Ribbon虽然只是一个工具类框架，它不像服务注册中心、配置中心、API网关那样需要独立部署，但是它几乎存在于每一个Spring Cloud构建的微服务和基础设施中。因为微服务间的调用，API网关的请求转发等内容，实际上都是通过Ribbon来实现的，包括后续我们将要介绍的Feign，它也是基于Ribbon实现的工具。所以，对Spring Cloud Ribbon的理解和使用，对于我们使用Spring Cloud来构建微服务非常重要。**
+
+#### 3.2 Bean 配置
+
+```java
+@Configuration
+public class CloudConfig {
+
+    /**
+     * Ribbon是基础Netflix Ribbon实现的一套客户端 负载均衡工具
+     */
+    @Bean
+    @LoadBalanced
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
+```
+#### 3.3 Eureka 服务
+- 服务端若是集群，默认是轮询调用
+
+
+#### 3.4 调用 配置 
+```java
+@RestController
+public class TestController {
+
+    @Autowired
+    RestTemplate restTemplate;
+
+    /**
+     * 注册到Eureka的 http:// + 服务名称 + 控制器
+     * @return
+     */
+    @GetMapping("/test")
+    public String hello() {
+        return restTemplate.getForObject("http://SPRING-CLOUD-CONSUMER/hello", String.class, String.class);
+    }
+
+}
+```
+### 四、Feign 负载均衡（重点使用）
+
+#### 4.1 简介
+
+​	**Feign是一个声明式的伪Http客户端，它使得写Http客户端变得更简单。使用Feign，只需要创建一个接口并注解。它具有可插拔的注解特性，可使用Feign 注解和JAX-RS注解。Feign支持可插拔的编码器和解码器。Feign默认集成了Ribbon，并和Eureka结合，默认实现了负载均衡的效果。**
+
+**简而言之：**
+
+- **Feign 采用的是基于接口的注解**
+
+- **Feign 整合了ribbon，具有负载均衡的能力**
+
+- **整合了Hystrix，具有熔断的能力**
