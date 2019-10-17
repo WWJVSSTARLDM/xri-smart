@@ -14,7 +14,6 @@ eureka:
     response-cache-update-interval-ms: 30000
     # 启用主动失效，并且每次主动失效检测间隔为30s，默认为0
     eviction-interval-timer-in-ms: 30000
-
 # eureka 应用名称
 spring:
   application:
