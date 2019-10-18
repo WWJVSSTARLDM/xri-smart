@@ -12,3 +12,5 @@ spring:
       profile: dev
       # 拉去远程配置找不到则不会启动
       fail-fast: true
+server:
+  port: 9000

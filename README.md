@@ -771,9 +771,6 @@ spring:
           # 开启url路径服务名使用小写(开启后无法使用大写)
           # localhost:9000/scm-service-consumer/order
           lower-case-service-id: true
-#tomcat端口
-server:
-  port: 9000
 ```
 #### 7.5 网关配置路由
 - 网关路由是可以通过yml配置也可以直接代码配置，逐一介绍
@@ -1320,19 +1317,52 @@ turbine:
 
 ### 11.1 简介
 
-​	**Zipkin是一种分布式跟踪系统。它有助于收集解决微服务架构中延迟问题所需的时序数据。它管理这些数据的收集和查找。Zipkin的设计基于 Google Dapper论文。
+​	**Zipkin是一种分布式跟踪系统。它有助于收集解决微服务架构中延迟问题所需的时序数据。它管理这些数据的收集和查找。Zipkin的设计基于 Google Dapper论文。**
 
-应用程序用于向Zipkin报告时间数据。Zipkin用户界面还提供了一个依赖关系图，显示每个应用程序有多少跟踪请求。如果您正在解决延迟问题或错误问题，则可以根据应用程序，跟踪长度，注释或时间戳过滤或排序所有跟踪。选择跟踪后，您可以看到每个跨度所需的总跟踪时间百分比，从而可以识别问题应用程序。**
+**应用程序用于向Zipkin报告时间数据。Zipkin用户界面还提供了一个依赖关系图，显示每个应用程序有多少跟踪请求。如果您正在解决延迟问题或错误问题，则可以根据应用程序，跟踪长度，注释或时间戳过滤或排序所有跟踪。选择跟踪后，您可以看到每个跨度所需的总跟踪时间百分比，从而可以识别问题应用程序**
 
 #### 11.2 Pom 配置 
+> 有了网关要从网关开始跟踪,一直到服务被调用，所以网关、消费者。提供者都需要引入。
+
+- yml配置
 ```xml
- 
+        <!-- zipkin 链路跟踪 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-zipkin</artifactId>
+        </dependency>
 ```
-#### 11.3 启动类 配置
-```java
- 
-```
+#### 11.3 注意事项
+**Spring Boot 2.0之后，使用EnableZipkinServer创建自定义的zipkin服务器已经被废弃，将无法启动.ZipkinServer 由官方提供jar包。我们只需要到官网下载即可。地址：https://dl.bintray.com/openzipkin/maven/io/zipkin/java/zipkin-server 找到latest release 进行下载。我这里是windows 环境，打开cmd  java -jar zipkin-server-xxx.jar 启动。 访问 http://localhost:9411/**
+
+
 #### 11.4 yml 配置
-```yaml
- 
+> 需要跟踪的服务已经全部引入maven依赖，所以同样需要配置，这里用网关为实例，以此类推，进行加入zipkin的配置。
+
+> 只看链路跟踪即可，其他配置章节全部讲过
+```yml 
+spring:
+  application:
+    # 这里配置注册到Eureka的服务名称
+    name: xri-gateway
+  # 链路跟踪
+  zipkin:
+    # zipkin URL地址(将链路发送给下载的zipkin服务)
+    base-url: http://localhost:9411
+  sleuth:
+    sampler:
+      # 1.1 代表百分之百上传到链路
+      probability: 1.0
+  redis:
+    host: 106.13.90.174
+    port: 6379
+  # 开启此配置无需配置路由即可根据Eureka注册服务名转发
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+          # 开启url路径服务名使用小写(开启后无法使用大写)
+          # localhost:9000/scm-service-consumer/order
+          lower-case-service-id: true
 ```
