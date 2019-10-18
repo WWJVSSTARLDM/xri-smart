@@ -48,8 +48,8 @@
 | 七    | GateWay      | 服务网关         |
 | 八    | Config    | 配置中心         |
 | 九    | Bus       | 消息总线         |
-| 九    | Turbine    | Hystrix 集群监控|
-| 十    | Zipkin    | 微服务链路跟踪|
+| 十    | Turbine    | Hystrix 集群监控|
+| 十一    | Zipkin    | 微服务链路跟踪|
 
 
 ### 一、Eureka 注册中心 (重点使用)
@@ -1126,7 +1126,7 @@ env: hello
 @RestController
 // 实时刷新需要此注解，并且是哪个类的值刷新则注解到哪个类
 @RefreshScope
-public class ConsumerController {
+public class ConfigClientRest {
 
     @Value("${spring.application.name}")
     private String applicationName;
@@ -1189,8 +1189,148 @@ public class ConsumerController {
 
 #### 9.5.1 Github Webhooks功能!
 
-> 请自行百度，这里不做演示
+``请自行百度，这里不做演示`
 
-### 十、
+### 十、Turbine
 
-未完待续。
+
+### 10.1 简介
+
+​	**对于查看单个Eureka实例的健康情况是没有多大用处的，如果查看单个实例的健康情况，可以直接通过Hystrix提供的hystrix.stream就可以实现（把对应的URL地址放入Hystrix Dashboard中查看状态），对于一个系统的所有集群的健康状态，是我们了解系统健康状态的最宏观也是最有用的方式，Turbine就是聚合系统的所有集群的健康状态，就是把多个/hystrix.stream，全部聚合在/turbine.stream中，通过Hystrix Dashboard中可视化查看。**
+
+#### 10.2 Pom 配置 
+> turbine与hystrixdashboard整合一起进行监控
+```xml
+         <!-- hystrix-dashboard -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix-dashboard</artifactId>
+        </dependency>
+        <!-- eureka 客户端 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <!-- SpringCloud Config 客户端 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-config-client</artifactId>
+        </dependency>
+        <!-- turbine 集群监控  -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-turbine</artifactId>
+        </dependency>
+        <!-- hystrix -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        </dependency>
+        <!-- actuator 健康检查、审计、统计、监控、热更新 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+```
+#### 10.3 启动类 配置
+```java
+/*
+  *
+ * HystrixDashboard 监控ui
+ * @Param localhost Hystrix Dashboard Service Address
+ * @Param port      Hystrix Dashboard Service Address
+ * {@link} http://localhost:port/hystrix
+ *
+ * 监控集群ui 表单
+ * @Param localhost Micro Service Address
+ * @Param port      Micro Service Port
+ * {@link} http://localhost:port/turbine.stream
+ */
+@EnableEurekaClient
+@RestController
+@EnableHystrix
+@EnableHystrixDashboard
+@EnableTurbine
+@SpringCloudApplication
+public class HystrixDashboardApp {
+    public static void main(String[] args) {
+        SpringApplication.run(HystrixDashboardApp.class, args);
+    }
+}
+```
+#### 10.4 yml 配置
+> 本节包括后节都是使用Config配置中心进行配置，即是本地 bootstarp.yml Github仓库 根据本地配置名字加后缀进行设置文件名，若有公用配置application-dev.yml，依然优先级读取公用配置，则后读取各自配置文件配置(此后不再说明)
+
+- 本地bootstarp.yml
+```yaml
+ spring:
+  application:
+    # 这里是配置的github拉取的文件名前缀(不包含-dev)
+    name: xri-hystrix-dashboard
+  cloud:
+    config:
+      discovery:
+        # 开启cloud配置
+        enabled: true
+        service-id: xri-config-server
+      # 本次访问的配置项
+      profile: dev
+      fail-fast: true
+server:
+  port: 8762
+```
+- github仓库配置
+```yml
+spring:
+  application:
+    # 这里配置注册到Eureka的服务名称
+    name: xri-hystrix-dashboard
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      cors:
+        allowed-origins: "*"
+        allowed-methods: "*"
+turbine:
+  app-config: xri-service-api-consumer-impl,xri-service-api-provider-impl
+  aggregator:
+    clusterConfig: default
+  clusterNameExpression: new String("default")
+  combine-host-port: true
+  instanceUrlSuffix:
+    default: /actuator/hystrix.stream
+```
+##### 10.5 监控步骤
+###### 10.5.1 启动HystrixDashdoard服务
+
+> 运行Hystrix微服务 访问  `http://localhost:8762/hystrix` 会出现Hystrix页面，也就代表服务运行成功
+
+
+###### 10.5.2 使用监控
+ - 在路径填写要被监控的服务即可 根据业务填写具体端口（注意这里和单节点不同，请求为/turbine.stream`）
+    `http://localhost:port/turbine.stream`
+ - Delay：2000
+ - Title：标题
+
+
+### 十一、Zipkin
+
+
+### 11.1 简介
+
+​	** **
+
+#### 11.2 Pom 配置 
+```xml
+ 
+```
+#### 11.3 启动类 配置
+```java
+ 
+```
+#### 11.4 yml 配置
+```yaml
+ 
+```
