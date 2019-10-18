@@ -515,7 +515,7 @@ public class OrderServiceFallback implements OrderServiceFeign {
 }
 ```
 
-##### 5.6.6 Yml 依赖配置
+##### 5.6.6 Yml 
 ```yaml
 eureka:
   instance:
@@ -550,3 +550,158 @@ feign:
 ​	**Hystrix Dashboard是Hystrix的仪表盘组件，主要用来实时监控Hystrix的各项指标信息，通过界面反馈的信息可以快速发现系统中存在的问题。**
 
 ​	**使用Hystrixdashboard 必须在提供者提供的接口上使用@HystrixCommand注解,可以不提供熔断函数，但是不提供也将出现异常无回调函数，导致系统出现雪崩。**
+
+#### 6.2 Pom 配置
+```xml
+        <!-- eureka 客户端 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <!-- hystrix 组件-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        </dependency>
+        <!-- hystrix-dashboard -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix-dashboard</artifactId>
+        </dependency>
+        <!-- actuator 组件 健康检查、审计、统计和监控 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+```
+
+#### 6.3 启动类 配置
+```java
+/**
+ * 开启EnableHystrixDashboard
+ */
+@EnableHystrixDashboard
+@SpringBootApplication
+public class HystrixDashboardApp {
+
+    public static void main(String[] args) {
+        SpringApplication.run(HystrixDashboardApp.class, args);
+    }
+
+}
+
+```
+
+#### 6.3.1 Hystrixdashborard Yml配置
+```yml
+eureka:
+  instance:
+    # 现实服务的IP:Port
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # 不加此项 如果注册中心 和 服务位于同一服务器，会导致 注册的ip为 localhost，导致其他 地址 无法访问此 服务
+    prefer-ip-address: true
+    ip-address: ${spring.cloud.client.ip-address}
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+# client 应用名称
+spring:
+  application:
+    name: xri-hystrix-dashboard
+#tomcat端口
+server:
+  port: 8762
+```
+
+
+#### 6.4 需要监控的服务 （消费者端）
+
+##### 6.4.1 Pom 配置
+> 所有需要被监控的微服务都要引入该依赖(必须)
+
+```xml
+        <!-- actuator 组件 健康检查、审计、统计和监控 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+```
+
+##### 6.4.2 启动类配置 
+```java
+
+/**
+ * Consumer启动类，并且开启hystrix
+ */
+@EnableFeignClients
+@SpringCloudApplication
+public class ConsumerApp {
+    public static void main(String[] args) {
+        SpringApplication.run(ConsumerApp.class, args);
+    }
+}
+```
+
+
+##### 6.4.3 Yml 配置
+```yaml
+eureka:
+  instance:
+    # 现实服务的IP:Port
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # 不加此项 如果注册中心 和 服务位于同一服务器，会导致 注册的ip为 localhost，导致其他 地址 无法访问此 服务
+    prefer-ip-address: true
+    ip-address: ${spring.cloud.client.ip-address}
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+# client 应用名称
+spring:
+  application:
+    name: xri-service-api-consumer-impl
+#tomcat端口
+server:
+  port: 8001
+# 开启hystrix 熔断降级（这里如果不配置，将无效）
+feign:
+  hystrix:
+    enabled: true
+# 使用服务监控释放的访问路径,后续的配置中心bus刷新也需要释放
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+```
+
+##### 6.4.4 消费者 接口
+
+```java
+/**
+ * Feign接口对应的Controller
+ */
+@RestController
+public class ConsumerController {
+
+    @Autowired
+    ConsumerService providerService;
+
+    @GetMapping("/order")
+    public Order getOrder(@RequestParam Long id) {
+        System.out.println("ConsumerController...");
+        return consumerService.getOrder(id);
+    }
+}
+```
+##### 6.4.5 监控步骤
+###### 6.4.5.1 启动HystrixDashdoard服务
+
+> 运行Hystrix微服务 访问  `http://localhost:8762/hystrix` 会出现Hystrix页面，也就代表服务运行成功
+
+
+###### 6.4.5.2 使用监控
+ - 在路径填写要被监控的服务即可 根据业务填写具体端口
+    `http://localhost:8501/actuator/hystrix.stream`
+ - Delay：2000
+ - Title：标题
+
