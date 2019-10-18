@@ -13,6 +13,7 @@
         <module>xri-service-api-login</module>
         <module>xri-service-api-consumer-impl</module>
         <module>xri-service-api-provider-impl</module>
+        <module>xri-service-api-security-impl</module>
     </modules>
     <artifactId>xri-service-modules</artifactId>
 
