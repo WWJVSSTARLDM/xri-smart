@@ -48,6 +48,8 @@
 | 七    | GateWay      | 服务网关         |
 | 八    | Config    | 配置中心         |
 | 九    | Bus       | 消息总线         |
+| 九    | Turbine    | Hystrix 集群监控|
+| 十    | Zipkin    | 微服务链路跟踪|
 
 
 ### 一、Eureka 注册中心 (重点使用)
@@ -828,3 +830,193 @@ localhost:9000/api/order?id=1
 ```yml
   待补充
 ```
+
+### 八、Config 配置中心
+
+### 8.1 简介
+
+​	**Spring Cloud Config为分布式系统中的外部配置提供服务器和客户端支持。使用Config Server，您可以为所有环境中的应用程序管理其外部属性。它非常适合spring应用，也可以使用在其他语言的应用上。随着应用程序通过从开发到测试和生产的部署流程，您可以管理这些环境之间的配置，并确定应用程序具有迁移时需要运行的一切。服务器存储后端的默认实现使用git，因此它轻松支持标签版本的配置环境，以及可以访问用于管理内容的各种工具。**
+
+#### 8.2 Pom 配置 
+```xml
+        <!-- SpringCloud Config server端 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-config-server</artifactId>
+        </dependency>
+        <!-- Eureka 客户端-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+```
+#### 8.3 启动类 配置
+```java
+/**
+ * 声明该服务 是cloud config server
+ */
+ */
+@SpringBootApplication
+@EnableDiscoveryClient
+@EnableConfigServer
+public class ConfigServerApp {
+    public static void main(String[] args) {
+        SpringApplication.run(ConfigServerApp.class, args);
+    }
+}
+```
+#### 8.4 yml 配置
+```yaml
+eureka:
+  instance:
+    # 现实服务的IP:Port
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # 不加此项 如果注册中心 和 服务位于同一服务器，会导致 注册的ip为 localhost，导致其他 地址 无法访问此 服务
+    prefer-ip-address: true
+    ip-address: ${spring.cloud.client.ip-address}
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+spring:
+  application:
+    name: xri-config-server
+    # Github远程仓库地址
+  cloud:
+    config:
+      server:
+        git:
+          # git 存放配置文件项目地址
+          uri: https://github.com/xr2117/xri-smart-config.git
+          username: github账号
+          password: github密码
+          # GitHub如果创建文件夹，则指定在那个文件夹下
+#          search-paths: /dev
+#tomcat端口
+server:
+  port: 3344
+```
+#### 8.5 Github 创建远程仓库
+
+- 创建存放配置文件仓库
+
+- Github创建仓库这里不做讲解，
+`https://www.cnblogs.com/zhixi/p/9584624.html` 可根据介绍创建
+
+##### 8.5.1 创建 Yml push到Github
+**下面以消费者为例，由于一些公用的配置，比如Eureka注册是每个注册到Eureka服务都需要的配置，这里可以提取为公用配置文件，在自己服务的基础上需要各自的配置在进行创建单独的排位置文件,微服务拉去配置会先读取application.yml，因为application.yml优先级最高。
+文件也是区分dev模式和master模式，也就是所谓的测试版本和上线版本**
+
+> 公用配置文件新建yml文件（文件名application-dev，重点：格式一定为UTF-8）
+```yml
+eureka:
+  instance:
+    # 现实服务的IP:Port
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # 不加此项 如果注册中心 和 服务位于同一服务器，会导致 注册的ip为 localhost，导致其他 地址 无法访问此 服务
+    prefer-ip-address: true
+    ip-address: ${spring.cloud.client.ip-address}
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+```
+
+> - 1. 新建yml文件（文件名xri-service-api-consumer-impl-dev，重点：格式一定为UTF-8）
+```yaml
+spring:
+  application:
+    # 注册到Eureka服务的应用名称
+    name: xri-service-api-consumer-impl
+  datasource:
+    # 本次为介绍，加入hikari 连接池
+    hikari:
+      # 详细配置请访问：https://github.com/brettwooldridge/HikariCP
+      data-source-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://106.13.90.174:3306/test
+      username: root
+      password: root
+      # 最小空闲链接数量
+      minimum-idle: 5
+      # 空闲连接存活最大时间，默认600000（10分钟）
+      idle-timeout: 180000
+      # 连接池最大连接数，默认是10
+      maximum-pool-size: 8
+      # 数据库连接超时时间,默认30秒，即30000
+      connection-timeout: 30000
+# 开启服务降级
+feign:
+  hystrix:
+    enabled: true
+```
+
+> - 2. push 到github 远程仓库
+
+**这里不做git命令教学，请自己学习**
+
+### 8.6 搭建config clinet端（以consumer为例）
+
+#### 8.6.1 Pom 配置
+```xml
+        <!-- SpringCloud Config 客户端 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-config-client</artifactId>
+        </dependency>
+```
+#### 8.6.2 启动类 配置
+```java
+@EnableFeignClients
+@SpringCloudApplication
+public class ConsumerApp {
+    public static void main(String[] args) {
+        SpringApplication.run(ConsumerApp.class, args);
+    }
+}
+
+```
+#### 8.6.3 (bootstrap.yml) 配置
+
+- 使用Spring Cloud 配置中心，配置文件名字为 bootstrap.yml (重点：命名规范)
+
+```yaml
+spring:
+  application:
+    # 应用名称并且对应github文件名前缀（xri-service-api-consumer-impl-dev.yml）
+    name: xri-service-api-consumer-impl
+  cloud:
+    config:
+      discovery:
+        # 开启cloud配置
+        enabled: true
+        # 注册到Eureka的服务（config server的注册名）
+        service-id: xri-config-server
+      # 本次访问的配置项(即是xri-service-api-consumer-impl-dev配置，可切换master)
+      profile: dev
+      # 若拉取不到配置文件则不适用默认配置，即8080Tomcat默认
+      fail-fast: true
+# 由于微服务会搭建集群，实例为同一个服务，但是端口不同，所以端口进行再项目里的bootstrap.yml 进行配置
+server:
+  port: 8501
+```
+### 8.7 运行测试 + 运行流程介绍
+> clinet端通过yml配置找到对应注册中心的server服务，server服务配置好了github仓库进行拉取配置，clinet读取server拉取下来的配置进行启动
+>
+```java
+@RestController
+public class ConsumerController {
+
+    @Value("${spring.application.name}")
+    private String applicationName;
+
+
+    @Value("${server.port}")
+    private String port;
+
+    @Value("${env}")
+    private String env;
+
+    @RequestMapping("/config")
+    public void getConfig() {
+        System.out.println("applicationName : " + applicationName);
+    }
+}
+

@@ -20,7 +20,7 @@ spring:
           uri: https://github.com/xr2117/xri-smart-config.git
           username: xr2117
           password: llm818222
-          # Gitlab 下文件夹
+          # GitHub如果创建文件夹，则指定在那个文件夹下
 #          search-paths: /dev
   rabbitmq:
     host: 106.13.90.174
