@@ -1366,3 +1366,10 @@ spring:
           # localhost:9000/scm-service-consumer/order
           lower-case-service-id: true
 ```
+
+#### 11.5 使用介绍
+
+**访问http://localhost:9411即可以看到zipkin的UI界面，之后进行请求网关转发到接口，在zipkin上就看看到具体的链路跟踪以及相关信息**
+
+### 十一、未完待续
+**若有新功能，笔者会及时更新**
