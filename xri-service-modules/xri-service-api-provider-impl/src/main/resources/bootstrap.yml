@@ -1,6 +1,6 @@
 spring:
   application:
-    # 应用名称并且对应github文件名前缀
+    # 这里是配置的github拉取的文件名前缀(不包含-dev)
     name: xri-service-api-provider-impl
   cloud:
     config:

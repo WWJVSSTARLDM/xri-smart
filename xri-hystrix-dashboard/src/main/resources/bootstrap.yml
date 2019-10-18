@@ -1,5 +1,6 @@
 spring:
   application:
+    # 这里是配置的github拉取的文件名前缀(不包含-dev)
     name: xri-hystrix-dashboard
   cloud:
     config:
