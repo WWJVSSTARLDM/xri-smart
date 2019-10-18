@@ -1007,9 +1007,129 @@ public class ConsumerController {
     @Value("${spring.application.name}")
     private String applicationName;
 
+    @RequestMapping("/config")
+    public void getConfig() {
+        System.out.println("applicationName : " + applicationName);
+    }
+}
 
-    @Value("${server.port}")
-    private String port;
+
+```
+### 九、Spring Cldou Bus（用于Spring Cloud Server）
+
+### 9.1 简介
+
+​	**使用Cloud Config 配置中心，如果实施动态的配置更新，需要使用Bus组件，该组件需要配置好消息队列（RabbitMq），启动项目后会自动创建一个消息队列。因为是热更新，所以继续在Config Server实现**
+
+#### 9.2 Config Server 端
+##### 9.2.1 Pom 配置
+```xml
+        <!-- 热更新配置 bus -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bus-amqp</artifactId>
+        </dependency>
+```
+##### 9.2.2 启动类配置
+```java
+/**
+ * 该服务是个cloud config server
+ */
+@SpringBootApplication
+@EnableDiscoveryClient
+@EnableConfigServer
+public class ConfigServerApp {
+    public static void main(String[] args) {
+        SpringApplication.run(ConfigServerApp.class, args);
+    }
+}
+```
+##### 9.2.2 Yml 配置
+```yaml
+  # bus 配置加入rabbitmq
+  rabbitmq:
+    host: 106.13.90.174
+    username: admin
+    password: burning
+# bus-amqp  需要热更新的客户端暴露接口
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+```
+#### 9.3 Config Clinet 端
+##### 9.3.1 Pom 配置
+```xml
+       <!-- SpringCloud Config Bus-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bus-amqp</artifactId>
+        </dependency>
+```
+##### 9.3.2 启动类配置
+```java
+
+/**
+ * 该服务是cloud client
+ */
+@EnableFeignClients
+@SpringCloudApplication
+public class ConsumerApp {
+    public static void main(String[] args) {
+        SpringApplication.run(ConsumerApp.class, args);
+    }
+}
+
+```
+##### 9.3.3 Yml 配置
+```yaml
+# 这次不是应用名称，而是github对应的-dev.yml配置文件名的前缀
+spring:
+  application:
+    # 应用名称并且对应github文件名前缀
+    name: xri-service-api-consumer-impl
+  cloud:
+    config:
+      discovery:
+        # 开启cloud配置
+        enabled: true
+        service-id: xri-config-server
+      # 本次访问的配置项
+      profile: dev
+      fail-fast: true
+server:
+  port: 8501
+```
+#### 9.4 测试动态刷新配置
+
+##### 9.4.1 修改github 配置文件（修改前）
+```yaml
+spring:
+  application:
+    # 注册到Eureka的服务名称
+    name: xri-service-api-consumer-impl
+# 开启服务降级
+feign:
+  hystrix:
+    enabled: true
+# bus-amqp  需要热更新的客户端暴露接口
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+env: hello
+```
+##### 9.4.2 访问client测试接口
+```java
+@RestController
+// 实时刷新需要此注解，并且是哪个类的值刷新则注解到哪个类
+@RefreshScope
+public class ConfigClientRest {
+
+    @Value("${spring.application.name}")
+    private String applicationName;
 
     @Value("${env}")
     private String env;
@@ -1017,6 +1137,60 @@ public class ConsumerController {
     @RequestMapping("/config")
     public void getConfig() {
         System.out.println("applicationName : " + applicationName);
+        System.out.println("env : " + env);
     }
 }
+```
+##### 9.4.3. 修改后 (并且push到 github)
+```yaml
+spring:
+  application:
+    # 注册到Eureka的服务名称
+    name: xri-service-api-consumer-impl
+# 开启服务降级
+feign:
+  hystrix:
+    enabled: true
+# bus-amqp  需要热更新的客户端暴露接口
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+# 修改为world
+env: world
+```
+##### 9.4.4 访问Config server暴露的接口 进行刷新配置（消息队列自动实现）
+`POST 请求 http://localhost:3344/actuator/bus-refresh`
 
+##### 9.4.5.  访问client测试接口
+```java
+@RestController
+// 实时刷新需要此注解，并且是哪个类的值刷新则注解到哪个类
+@RefreshScope
+public class ConsumerController {
+
+    @Value("${spring.application.name}")
+    private String applicationName;
+
+    @Value("${env}")
+    private String env;
+
+    @RequestMapping("/config")
+    public void getConfig() {
+        System.out.println("applicationName : " + applicationName);
+        System.out.println("env : " + env);
+    }
+}
+```
+##### 9.5 实现Bus 修改文件自动更新，需要内网映射这里不做演示
+
+> 实现需要内网映射，笔者没有做内网映射，这个很简单我就不做演示了
+
+#### 9.5.1 Github Webhooks功能!
+
+``请自行百度，这里不做演示`
+
+### 十、
+
+未完待续。
