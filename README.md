@@ -705,3 +705,126 @@ public class ConsumerController {
  - Delay：2000
  - Title：标题
 
+
+### 七、Gateway 网关
+
+### 7.1 简介
+
+​	**Spring Cloud Gateway是Spring官方基于Spring 5.0，Spring Boot 2.0和Project Reactor等技术开发的网关，Spring Cloud Gateway旨在为微服务架构提供一种简单而有效的统一的API路由管理方式。Spring Cloud Gateway作为Spring Cloud生态系统中的网关，目标是替代Netflix ZUUL，其不仅提供统一的路由方式，并且基于Filter链的方式提供了网关基本的功能，例如：安全，监控/埋点，和限流等。**
+
+
+#### 7.2 Pom 配置
+```xml
+        <!-- Eureka 客户端-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <!-- gateway 网关-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
+        </dependency>
+        <!-- hystrix 服务降级 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+        </dependency>
+```
+#### 7.3 启动类 配置
+```java
+/**
+ * 开启Gateway网关
+ */
+@SpringBootApplication
+@EnableDiscoveryClient
+public class GateWayApp {
+    public static void main(String[] args) {
+        SpringApplication.run(GateWayApp.class,args);
+    }
+}
+```
+#### 7.4 Yml 配置
+```yaml
+eureka:
+  instance:
+    # 现实服务的IP:Port
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    # 不加此项 如果注册中心 和 服务位于同一服务器，会导致 注册的ip为 localhost，导致其他 地址 无法访问此 服务
+    prefer-ip-address: true
+    ip-address: ${spring.cloud.client.ip-address}
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+# client 应用名称
+spring:
+  application:
+    name: xri-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          # 开启此配置无需配置路由即可根据Eureka注册服务名转发 false暂时是不开启
+          enabled: false
+          # 开启url路径服务名使用小写(开启后无法使用大写)
+          # localhost:9000/scm-service-consumer/order
+          lower-case-service-id: true
+#tomcat端口
+server:
+  port: 9000
+```
+#### 7.5 网关配置路由
+- 网关路由是可以通过yml配置也可以直接代码配置，逐一介绍
+
+##### 7.5.1 Config 路由配置(代码版本)
+```java
+ * Gateway 路由配置
+ */
+@Configuration
+public class RouteConfig {
+
+    @Bean
+    public RouteLocator routeLocator(RouteLocatorBuilder builder) {
+        /**
+         * 详情配置参照官方文档
+         * {@link} https://github.com/spring-cloud-samples/spring-cloud-gateway-sample/blob/master/src/main/java/com/example/demogateway/DemogatewayApplication.java
+         */
+        return builder.routes()
+                /**
+                 * consumer 是本次consumer的id
+                 * r.path("/consumer/**")是请求的url
+                 * .uri("http://www.jd.com")则是进行转发到京东
+                 */
+                .route("consumer", r -> r.path("/consumer/**")
+                        .uri("http://www.jd.com"))
+                .route("scm-service-consumer", r -> r.path("/api/**")
+                        /**
+                         * 整合 Hystrix 加入回滚
+                         * f.stripPrefix(1) 去掉第一个前缀转发 没有了api
+                         * localhost:9000/api/order?id=1 -> localhost:9000/xr-service-api-consumer-impl/order?id=1
+                         * url就是转发路径。lb是轮训机制到该服务下面的所有节点
+                         */
+                        .filters(f -> f.stripPrefix(1).hystrix(config -> config.setFallbackUri("forward:/hystrixFallback")))
+                        .uri("lb://XRI-SERVICE-API-CONSUMER-IMPL"))
+                .build();
+    }
+}
+```
+##### 7.5.2 不使用 gateway 访问
+```yaml
+#　直接请求服务的Url 9000是网关的端口
+http://localhost:9000/api/order?id=1
+```
+
+##### 7.5.3 使用 gateway 访问
+```yaml
+#　需要根据route设置加入前缀进行网关转发
+localhost:9000/api/order?id=1
+```
+
+##### 7.5.4 路由访问映射Yml版本
+> - yml 配置
+
+```yml
+  待补充
+```
