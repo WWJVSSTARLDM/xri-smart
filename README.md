@@ -1126,7 +1126,7 @@ env: hello
 @RestController
 // 实时刷新需要此注解，并且是哪个类的值刷新则注解到哪个类
 @RefreshScope
-public class ConfigClientRest {
+public class ConsumerController {
 
     @Value("${spring.application.name}")
     private String applicationName;
@@ -1189,7 +1189,7 @@ public class ConsumerController {
 
 #### 9.5.1 Github Webhooks功能!
 
-``请自行百度，这里不做演示`
+> 请自行百度，这里不做演示
 
 ### 十、
 
