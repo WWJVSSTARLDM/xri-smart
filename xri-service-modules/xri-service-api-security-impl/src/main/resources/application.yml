@@ -1,0 +1,28 @@
+spring:
+#  application:
+#    # 这里配置注册到Eureka的服务名称
+#    name: xri-service-api-security-impl
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    username: root
+    password: Crazy@123
+    url: jdbc:mysql://106.13.90.174:3306/xri-smart
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#    # hikari 连接池
+#    :
+#      # 详细配置请访问：https://github.com/brettwooldridge/HikariCP
+#      data-source-class-name: com.mysql.cj.jdbc.Driver
+#      jdbc-url: jdbc:mysql://106.13.90.174:3306/test
+#      username: root
+#      password: root
+#      # 最小空闲链接数量
+#      minimum-idle: 5
+#      # 空闲连接存活最大时间，默认600000（10分钟）
+#      idle-timeout: 180000
+#      # 连接池最大连接数，默认是10
+#      maximum-pool-size: 8
+#      # 数据库连接超时时间,默认30秒，即30000
+#      connection-timeout: 30000
+logging:
+  level:
+    com.frame.security.mapper: debug

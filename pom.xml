@@ -24,14 +24,13 @@
         <java.version>1.8</java.version>
         <spring-cloud.version>Greenwich.SR1</spring-cloud.version>
         <lombok-version>1.18.6</lombok-version>
-        <mybatis-version>2.0.1</mybatis-version>
         <mysql-version>8.0.17</mysql-version>
-        <mapper-version>2.1.5</mapper-version>
         <commons-lang3.version>3.8.1</commons-lang3.version>
         <boot-version>2.1.6.RELEASE</boot-version>
         <codec-version>1.10</codec-version>
         <swagger-version>2.9.2</swagger-version>
-        <hikariCP-version>3.4.0</hikariCP-version>
+        <druid-version>1.1.20</druid-version>
+        <mybatisPlus-version>3.1.2</mybatisPlus-version>
     </properties>
 
     <!--  boot 版本控制  -->
@@ -59,11 +58,11 @@
                 <artifactId>lombok</artifactId>
                 <version>${lombok-version}</version>
             </dependency>
-            <!--  mybatis -->
+            <!-- mybatisPlus -->
             <dependency>
-                <groupId>org.mybatis.spring.boot</groupId>
-                <artifactId>mybatis-spring-boot-starter</artifactId>
-                <version>${mybatis-version}</version>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatisPlus-version}</version>
             </dependency>
             <!--  mysql  -->
             <dependency>
@@ -71,17 +70,11 @@
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql-version}</version>
             </dependency>
-            <!--  通用Mapper  -->
+            <!--  Druid 数据源  -->
             <dependency>
-                <groupId>tk.mybatis</groupId>
-                <artifactId>mapper-spring-boot-starter</artifactId>
-                <version>${mapper-version}</version>
-            </dependency>
-            <!--  HikariCP 数据源  -->
-            <dependency>
-                <groupId>com.zaxxer</groupId>
-                <artifactId>HikariCP</artifactId>
-                <version>${hikariCP-version}</version>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid</artifactId>
+                <version>${druid-version}</version>
             </dependency>
             <!-- commons-lang3 -->
             <dependency>

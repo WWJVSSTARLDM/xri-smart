@@ -1,15 +1,15 @@
-spring:
-  application:
-    # 这里是配置的github拉取的文件名前缀(不包含-dev)
-    name: xri-service-api-security-impl
-  cloud:
-    config:
-      discovery:
-        # 开启cloud配置
-        enabled: true
-        service-id: xri-config-server
-      # 本次访问的配置项
-      profile: dev
-      fail-fast: true
-server:
-  port: 8765
+#spring:
+#  application:
+#    # 这里是配置的github拉取的文件名前缀(不包含-dev)
+#    name: xri-service-api-security-impl
+#  cloud:
+#    config:
+#      discovery:
+#        # 开启cloud配置
+#        enabled: true
+#        service-id: xri-config-server
+#      # 本次访问的配置项
+#      profile: dev
+#      fail-fast: true
+#server:
+#  port: 8765

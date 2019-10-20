@@ -10,7 +10,6 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <modules>
-        <module>xri-service-api-login</module>
         <module>xri-service-api-consumer-impl</module>
         <module>xri-service-api-provider-impl</module>
         <module>xri-service-api-security-impl</module>
@@ -41,10 +40,16 @@
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
         </dependency>
-        <!--  HikariCP 数据源  -->
+        <!--  Druid 数据源  -->
         <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>${druid-version}</version>
+        </dependency>
+        <!-- mybatisPlus-->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
         </dependency>
     </dependencies>
      <!-- Maven 打包插件 -->

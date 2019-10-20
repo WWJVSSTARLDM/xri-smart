@@ -1,6 +1,0 @@
-spring:
-  application:
-    # 这里是配置的github拉取的文件名前缀(不包含-dev)
-    name: xri-service-api-login
-server:
-  port: 8000
