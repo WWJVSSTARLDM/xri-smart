@@ -5,20 +5,20 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.frame.security.entity.SysUser">
         <id column="id" property="id" />
-        <result column="user_name" property="userName" />
-        <result column="real_name" property="realName" />
+        <result column="username" property="username" />
+        <result column="realname" property="realname" />
         <result column="password" property="password" />
-        <result column="create_date" property="createDate" />
-        <result column="last_login_time" property="lastLoginTime" />
+        <result column="createDate" property="createDate" />
+        <result column="lastLoginTime" property="lastLoginTime" />
         <result column="enabled" property="enabled" />
-        <result column="account_non_expired" property="accountNonExpired" />
-        <result column="account_non_locked" property="accountNonLocked" />
-        <result column="credentials_non_expired" property="credentialsNonExpired" />
+        <result column="accountNonExpired" property="accountNonExpired" />
+        <result column="accountNonLocked" property="accountNonLocked" />
+        <result column="credentialsNonExpired" property="credentialsNonExpired" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, user_name, real_name, password, create_date, last_login_time, enabled, account_non_expired, account_non_locked, credentials_non_expired
+        id, username, realname, password, createDate, lastLoginTime, enabled, accountNonExpired, accountNonLocked, credentialsNonExpired
     </sql>
 
 </mapper>
