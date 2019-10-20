@@ -1,6 +1,7 @@
 package com.frame.security.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.frame.security.entity.SysPermission;
 import com.frame.security.entity.SysUser;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -38,5 +39,5 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
             "    INNER JOIN sys_permission sp ON srp.perm_id = sp.id  " +
             "WHERE " +
             "    su.realname = #{realName}")
-    List<GrantedAuthority> selectPermissionsByRealName(@Param("realName") String realName);
+    List<SysPermission> selectPermissionsByRealName(@Param("realName") String realName);
 }

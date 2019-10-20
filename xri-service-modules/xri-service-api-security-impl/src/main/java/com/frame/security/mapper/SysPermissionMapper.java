@@ -2,6 +2,7 @@ package com.frame.security.mapper;
 
 import com.frame.security.entity.SysPermission;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.springframework.stereotype.Component;
 
 /**
  * <p>
@@ -11,6 +12,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author Crazy.X
  * @since 2019-10-20
  */
+@Component
 public interface SysPermissionMapper extends BaseMapper<SysPermission> {
 
 }

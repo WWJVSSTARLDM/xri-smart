@@ -3,6 +3,9 @@ package com.frame.security.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -19,9 +22,8 @@ import java.util.List;
  * @author Crazy.X
  * @since 2019-10-20
  */
-//@Data
-//@EqualsAndHashCode(callSuper = false)
-//@Accessors(chain = true)
+@EqualsAndHashCode(callSuper = false)
+@Accessors(chain = true)
 public class SysUser implements Serializable, UserDetails {
 
     private static final long serialVersionUID = 1L;
